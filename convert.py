@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 import os
 import sys
 import subprocess
@@ -82,9 +82,6 @@ def un_div(text):
         text = text[text.index(">") + 1:].strip()
     return text
 
-print  un_div('<div style="float:left; maxwidth: 180px; margin-left:25px; margin-right:15px; background-color: #FFFFFF">[[Image:Pear.png|left|The Bosc Pear]]</div>')
-assert un_div('<div style="float:left; maxwidth: 180px; margin-left:25px; margin-right:15px; background-color: #FFFFFF">[[Image:Pear.png|left|The Bosc Pear]]</div>') == '[[Image:Pear.png|left|The Bosc Pear]]'
-
 def cleanup_mediawiki(text):
     """Modify mediawiki markup to make it pandoc ready.
 
@@ -140,7 +137,6 @@ def cleanup_mediawiki(text):
         new.append(line)
     return "\n".join(new)
 
-assert cleanup_mediawiki('<div style="float:left; maxwidth: 180px; margin-left:25px; margin-right:15px; background-color: #FFFFFF">[[Image:Pear.png|left|The Bosc Pear]]</div>') == '[[Image:Pear.png|left|The Bosc Pear]]'
 
 def clean_tag(tag):
     while "}" in tag:
@@ -186,7 +182,7 @@ def dump_revision(mw_filename, md_filename, text, title):
             # Maybe I should just have written a regular expression?
             with open(md_filename, "w") as handle:
                 handle.write("---\n")
-                handle.write("title: %s\n" % title)
+                handle.write("title: %s\n" % title.encode('utf-8'))
                 handle.write("redirect_to: /%s\n" % make_url(redirect))
                 handle.write("---\n\n")
                 handle.write("You should automatically be redirected to [%s](/%s)\n"
@@ -216,14 +212,14 @@ def dump_revision(mw_filename, md_filename, text, title):
         return False
     with open(md_filename, "w") as handle:
         handle.write("---\n")
-        handle.write("title: %s\n" % title)
+        handle.write("title: %s\n" % title.encode("utf-8"))
         handle.write("---\n\n")
         handle.write(stdout)
     return True
 
 def run(cmd_string):
-    #print(cmd_string)
-    return_code = os.system(cmd_string)
+    
+    return_code = os.system(cmd_string.encode("utf-8"))
     if return_code:
         sys_exit("Error %i from: %s" % (return_code, cmd_string), return_code)
 
