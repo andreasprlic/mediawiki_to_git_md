@@ -23,7 +23,7 @@ user_blacklist = "user_blocklist.txt"
 default_email = "anonymous.contributor@example.org"
 base_url = "http://www.open-bio.org/" # Used for images etc; prefix is appended to this!
 base_image_url = base_url + "w/images/" # Used for images
-
+page_prefixes_to_ignore = ["Help:", "MediaWiki:", "User:", "Talk:", "User_talk:"]
 
 git = "git" # assume on path
 pandoc = "pandoc" # assume on path
@@ -96,13 +96,13 @@ def cleanup_mediawiki(text):
     #
     # Replacing it with the following makes pandoc happy,
     #
-    # <source lang=Python>
+    # <source lang=python>
     # import antigravity
     # </source>
     #
     # Conversion by pandoc to GitHub Flavour Markdown gives:
     #
-    # ``` Python
+    # ``` python
     # import antigravity
     # ```
     #
@@ -122,9 +122,9 @@ def cleanup_mediawiki(text):
         # line is already unicode
         line = line.replace("\xe2\x80\x8e".decode("utf-8"), "")  # LEFT-TO-RIGHT
         if line.rstrip() == "<python>":
-            line = "<source lang=Python>"
+            line = "<source lang=python>"
         elif line.rstrip() == "<perl>":
-            line = "<source lang=Perl>"
+            line = "<source lang=perl>"
         elif line.rstrip() in ["</python>", "</perl>"]:
             line = "</source>"
         undiv = un_div(line)
@@ -357,12 +357,21 @@ def commit_file(title, filename, date, username, contents, comment):
         handle.write(base64.b64decode(contents))
     commit_files([filename], username, date, comment)
 
+def ignore_by_prefix(title):
+    for prefix in page_prefixes_to_ignore:
+        if title.startswith(prefix):
+            return True
+    return False
+
+
 if sys.platform != "linux2":
     #print("=" * 60)
     #print("Checking for potential name clashes")
     names = dict()
     for title, in c.execute('SELECT DISTINCT title FROM revisions ORDER BY title'):
-        if title.lower() not in names:
+        if ignore_by_prefix(title):
+            pass
+        elif title.lower() not in names:
             names[title.lower()] = title
         else:
             if names[title.lower()] != title:
@@ -384,7 +393,7 @@ for title, filename, date, username, text, comment in c.execute('SELECT * FROM r
         # Not wanted, ignore
         # print("Ignoring: %s" % title)
         continue
-    if title.startswith("MediaWiki:") or title.startswith("Help:"):
+    if ignore_by_prefix(title):
         # Not interesting, ignore
         continue
     if title.startswith("File:"):
@@ -392,12 +401,12 @@ for title, filename, date, username, text, comment in c.execute('SELECT * FROM r
         # TODO - capture the preferred filename from the XML!
         commit_file(title, filename, date, username, text, comment)
         continue
-    if title.startswith("User:") or title.startswith("Talk:") or title.startswith("User_talk:"):
-        # Not wanted, ignore
-        continue
-    if title.startswith("Template:") or title.startswith("Category:"):
+    if title.startswith("Template:"):
         # Can't handle these properly (yet)
         continue
+    # if title.startswith("Category:"):
+    #     # TODO - may need to insert some Jekyll template magic?
+    #     # See https://github.com/peterjc/mediawiki_to_git_md/issues/6
     assert filename is None
     md_filename = make_filename(title, markdown_ext)
     mw_filename = make_filename(title, mediawiki_ext)
