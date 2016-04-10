@@ -15,14 +15,14 @@ if len(sys.argv) == 1:
 mediawiki_xml_dump = sys.argv[1]  # TODO - proper API
 page_whitelist = sys.argv[2:]
 
-prefix = "wiki/"
+prefix = "_wikis/"
 mediawiki_ext = "mediawiki"
 markdown_ext = "md"
 user_table = "usernames.txt"
 user_blacklist = "user_blocklist.txt"
 default_email = "anonymous.contributor@example.org"
-base_url = "http://www.open-bio.org/" # Used for images etc; prefix is appended to this!
-base_image_url = base_url + "w/images/" # Used for images
+base_url = "http://biojava.org/" # Used for images etc; prefix is appended to this!
+base_image_url = base_url + "images/" # Used for images
 page_prefixes_to_ignore = ["Help:", "MediaWiki:", "User:", "Talk:", "User_talk:"]
 
 git = "git" # assume on path
@@ -42,7 +42,8 @@ with open(user_table, "r") as handle:
             continue
         try:
             username, github = line.strip().split("\t")
-        except ValueError:
+        except ValueError as e:
+            print(e)
             sys.stderr.write("Invalid entry in %s: %s" % (user_table, line))
             sys.exit(1)
         # TODO - expand this with a regular expression or something
